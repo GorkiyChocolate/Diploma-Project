@@ -1,0 +1,12 @@
+flowchart TD
+  Start[Invoke CLI generation command] --> Git{Find .git project root?}
+  Git -->|Yes| Root[Use Git project root as working scope]
+  Git -->|No| Cwd[Use invocation directory as working scope]
+  Root --> Source[Locate canonical YAML]
+  Cwd --> Source
+  Source --> Parse[Parse and validate]
+  Parse --> Resolve[Resolve built-in or cached services]
+  Resolve --> Convert[Generate selected targets]
+  Convert --> Existing{Would output overwrite manual changes?}
+  Existing -->|Yes| Stop[Stop / require explicit safe resolution]
+  Existing -->|No| Write[Write atomically]

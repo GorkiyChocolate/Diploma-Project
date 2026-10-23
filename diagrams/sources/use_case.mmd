@@ -1,0 +1,12 @@
+flowchart LR
+  User[Developer] --> Scope[Resolve project scope]
+  User --> Gen[Generate configurations]
+  User --> Import[Import existing Compose configuration]
+  User --> Browse[Search reusable service templates]
+  User --> Download[Download published configuration]
+  Gen --> Scope
+  Gen --> Validate[Validate input and output]
+  Gen --> Preserve[Preserve manual changes]
+  Publisher[Authenticated publisher] --> Publish[Publish versioned configuration]
+  Publisher --> History[Review versions and compare revisions]
+  Publish --> Auth[Authenticate with OAuth 2.0 / JWT]

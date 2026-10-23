@@ -1,0 +1,8 @@
+flowchart LR
+  Developer[Developer / DevOps Engineer] -->|Commands / canonical YAML| CLI[Rust CLI Tool]
+  CLI -->|Generated manifests| Workspace[(Project Workspace)]
+  CLI -->|Publish / search / download over HTTPS| API[ASP.NET Core REST API]
+  API --> Database[(PostgreSQL)]
+  API --> Auth[OAuth 2.0 Identity Provider]
+  Web[React Web Interface] -->|HTTPS| API
+  Publisher[Authenticated Publisher] --> Web

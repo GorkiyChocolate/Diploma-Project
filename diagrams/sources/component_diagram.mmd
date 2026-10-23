@@ -1,0 +1,29 @@
+flowchart TB
+ subgraph Local[Local machine]
+   Commands[CLI Command Layer]
+   Resolver[Project Scope Resolver]
+   Parser[Canonical YAML Parser]
+   Library[Built-in service catalog]
+   Cache[(Local template cache)]
+   Engine[Validation / Deterministic Generator]
+   Importer[Compose Importer]
+   Writer[Safe File Writer]
+   Commands --> Resolver
+   Commands --> Parser
+   Commands --> Importer
+   Parser --> Engine
+   Library --> Engine
+   Cache --> Engine
+   Engine --> Writer
+ end
+ subgraph Remote[Online platform]
+   API[ASP.NET Core API]
+   Auth[JWT / OAuth 2.0 authentication]
+   Versions[Publication and Version Service]
+   DB[(PostgreSQL)]
+   API --> Auth
+   API --> Versions
+   Versions --> DB
+   UI[React interface] --> API
+ end
+ Commands -. optional network calls .-> API
