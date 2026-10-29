@@ -1,3 +1,4 @@
+cli/.devinit/
 *.tmp
 .DS_Store
 __pycache__/
@@ -7,10 +8,7 @@ json.json
 /.vscode
 NeedToLearn.md
 compose.yaml
-compose.yaml.example
-env.example
 /resources
-.github/
 
 ## A streamlined .gitignore for modern .NET projects
 ## including temporary files, build results, and
