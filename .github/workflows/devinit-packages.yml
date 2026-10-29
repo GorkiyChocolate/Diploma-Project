@@ -49,9 +49,30 @@ jobs:
         shell: pwsh
         run: |
           $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
-          if (!(Test-Path $compiler)) { throw 'Inno Setup 6 is missing on the Windows runner' }
-          & $compiler '/DAppVersion=0.0.2' '/DBinaryDir=cli\target\release' '/DOutputDir=dist' 'installer\windows\DevInit.iss'
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          if (!(Test-Path $compiler)) {
+            throw 'Inno Setup 6 is missing on the Windows runner'
+          }
+
+          $binaryDir = Join-Path $env:GITHUB_WORKSPACE 'cli\target\release'
+          $outputDir = Join-Path $env:GITHUB_WORKSPACE 'dist'
+          $installerScript = Join-Path $env:GITHUB_WORKSPACE 'installer\windows\DevInit.iss'
+
+          New-Item -ItemType Directory -Force $outputDir | Out-Null
+
+          if (!(Test-Path (Join-Path $binaryDir 'devinit.exe'))) {
+            throw "devinit.exe not found in $binaryDir"
+          }
+
+          & $compiler `
+            '/DAppVersion=0.0.2' `
+            "/DBinaryDir=$binaryDir" `
+            "/DOutputDir=$outputDir" `
+            $installerScript
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: devinit-windows-x64
