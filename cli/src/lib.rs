@@ -20,7 +20,6 @@ pub mod models {
     pub mod env_struct;
     pub mod k8s_struct;
     pub mod resolver_struct;
-    pub mod services_struct;
 }
 
 pub mod generator;
@@ -54,3 +53,9 @@ pub mod presets;
 pub mod resolver;
 #[path = "core/service_registry.rs"]
 pub mod service_registry;
+
+#[path = "core/service_definitions.rs"]
+pub mod service_definitions;
+
+#[path = "core/service_paths.rs"]
+pub mod service_paths;

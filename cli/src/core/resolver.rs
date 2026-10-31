@@ -44,8 +44,33 @@ pub fn resolve_document(document: &mut Value, project_root: &Path) -> Result<(),
     };
 
     for (index, service) in services.iter_mut().enumerate() {
+        // Resolve shorthand service declarations using the registry.
+        //
+        // Example:
+        // services:
+        //   - postgresql
+        //   - redis
+        //
+        // Every shorthand service is converted into a complete
+        // RecipeCompose before CompileSpec deserialization.
+        if let Some(name) = service.as_str() {
+            let name = name.trim().to_ascii_lowercase();
+
+            if name.is_empty() {
+                return Err(configuration_error(format!(
+                    "services[{index}]: service name cannot be empty"
+                )));
+            }
+
+            let recipe = resolve_recipe(project_root, &name, None)?;
+
+            *service = serde_yaml::to_value(recipe)?;
+            continue;
+        }
+
         let Some(mapping) = service.as_mapping() else {
-            // Legacy scalar service declarations are preserved.
+            // Leave unsupported value types to the existing
+            // configuration deserializer and validators.
             continue;
         };
 
@@ -108,37 +133,32 @@ pub fn resolve_document(document: &mut Value, project_root: &Path) -> Result<(),
     Ok(())
 }
 
-/// Resolves a service from the built-in registry or local cache.
+/// Resolves a service from the installed YAML registry
+/// or the local recipe cache.
 ///
-/// The built-in registry is authoritative for supported
-/// built-in versions. Unknown services require a cached recipe.
+/// Installed YAML definitions always take priority.
+/// Cached recipes are used only for unknown services.
 pub fn resolve_recipe(
     project_root: &Path,
     name: &str,
     version: Option<&str>,
 ) -> Result<RecipeCompose, DevinitError> {
-    let builtin = service_registry::builtin_recipe(name);
+    let name = name.trim().to_ascii_lowercase();
 
-    if builtin.is_some() {
-        let expected =
-            service_registry::builtin_recipe_version(name, version).ok_or_else(|| {
-                configuration_error(format!(
-                    "Unsupported version '{version:?}' \
-                         for built-in service '{name}'"
-                ))
-            })?;
-
-        let cached = service_registry::cached_recipe_version(project_root, name, version)
-            .map_err(DevinitError::FileIOError)?;
-
-        return Ok(cached.unwrap_or(expected));
+    // 1. Installed YAML registry is authoritative.
+    if let Some(recipe) = service_registry::packaged_recipe_version(&name, version)
+        .map_err(DevinitError::FileIOError)?
+    {
+        return Ok(recipe);
     }
 
-    service_registry::cached_recipe_version(project_root, name, version)
+    // 2. Local cache for previously installed remote recipes.
+    service_registry::cached_recipe_version(project_root, &name, version)
         .map_err(DevinitError::FileIOError)?
         .ok_or_else(|| {
             DevinitError::ServiceNotFound(format!(
-                "{name} (version: {})",
+                "{} (version: {})",
+                name,
                 version.unwrap_or("default")
             ))
         })
